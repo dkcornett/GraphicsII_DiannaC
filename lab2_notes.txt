@@ -1,0 +1,197 @@
+edit "passthrough_transform"
+
+should get solid color field/doughnut/some other bs at this point
+
+go to "drawcolor_uniform" which is default set to "just white", but changing values will change colors! 
+but positioning is still incorrect because shader hasnt been fixed
+
+(instructions are largely in the shaders themselves)
+
+file->window utilities->"print renderer info" to see what version of GLSL your current computer is capable of running
+
+
+>line 31 
+layout (location = 0) in vec4 aPosition;
+
+
+>line 33 BECOMES
+uniform mat4 uMVP;
+
+//GLSL version later than ver430 use diff uniforms
+layout (location = 0) uniform mat uMVP;
+
+any version of GLSL you won't need to specify WHERE, but you CAN tell it where
+(if you don't specify it'll be a random number?)
+graphics hardware is pretty good at figuring out you're about to fuck UP your code
+
+
+
+> in void (main)
+gl_position = uMVP * aPosition;
+// the order of operations in this program is read right to left 
+// openGL is right-handed
+// [output] = [operations] [input]
+
+-you only need to declare the version once in the shader
+-if you don't declare it'll default to version 1! yuck!
+-you want 3 or greater
+
+VERTEX SHADER WILL BE REQUIRED OUTSIDE OF PIPELINE, BUT FRAGMENT SHADER IS OPTIONAL	
+together they make a program!
+
+!!!!!
+the output should now be a flat color field, 
+as all objects are being rendered in the exact same color with no lighting!
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SO LET'S CHANGE SOME ITEMS' COLORS
+
+>line 31
+uniform vec4 color;
+out vec4 rtFragColor
+
+>in main
+
+rtFragColor = uColor;
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+**** ATTRIBUTES ************
+
+
+IN SHADER passColor_transform and drawColor_transform
+
+passcolor reads color attributes
+drawColor 
+
+ONLY THE VERTEX SHADER HAS ACCESS TO VERTEX ATTRIBUTES
+so you gotta pass things into the fragment shader as varians
+
+IN PASSCOLOR 
+>line 36
+uniform mat4 uMVP;
+?line 42
+gl_position = uMVP * aPosition;
+
+now the axes objects are in the right position but not the right colors!
+
+>line 35 (feel free to move line 36 down a bit to make more room)
+layout (location = 3) in vec4 aColor;
+
+// Dan's workflow is "ins first, uniforms second, outs last"
+
+// keep note of this during other lectures
+
+// uniforms are program-wide! they can be accessed in every shader
+
+>line 39 (still about main())
+out vec4 vColor; //or call it anything else, we are using "v" for "varying"
+
+>line 45 (still)
+gl_position = uMVP * aPosition;
+>line46
+vColor = aColor;
+
+
+
+
+IN DRAWCOLOR
+
+>line 31
+in vec4 vColor;
+>line 33 (still?)
+out reColor fragColor;(?)
+>line 39 
+rtFragColor = vColor;
+
+
+
+
+---------------------------------------------------
+
+------------- ARCHITECTURE NOTES -----------------------
+
+----------------------------------------------
+
+IN the openGl library header files, "a3_VertexDescriptors"
+will give you all attritbutes and their indices in the 4x4 matrix
+
+IN "a1_DemoState_loading.c" is texturing stuff
+
+
+mode after "solid coloring" is "texturing"
+
+IN "a3_DemoState.h"
+//demoState holds game data and is not managed, just organization of all the data you're going to use
+// we have been heavily hinted that putting architecture in here muse be useful
+
+NOTE: animal3D uses its own map, check around line 160
+
+NOTE: around line 192 is a function "union{}"
+in a union everything has the exact same memory address
+more space than needed is being allocated here. larger memory output but faster operation.
+a union is basically a memory pool.
+
+there is an array at the top sharing memory with the struct!
+
+union{
+array [data type]
+
+struct
+{
+several arrays of size one which creates an object AND a pointer! so it can be used without instancing
+no address or dereference is needed
+}
+}
+
+
+DAN HAS COMMENTED OUT THE COMMENTED SECTION THAT STARTS AT LINE 295 IN DEMOSTATE.H
+
+comment out block comment markers! it's just faster
+
+ON TO "a3_DemoState_loading.c"
+
+comment out comment markers at 514 and 520
+
+306 and 324
+
+328 and 337
+
+activate the texture at line 379 instead of the one at 372 (comment out 371)
+
+438 and 489
+
+at this point the buffer is not getting cleared at the end of the loop,
+ and the axes markers seem to "grow" as if spreading out
+
+
+
+
+...
+
+in shader directory, "passTexcoord_transform_vs4x.glsl"
+you need index 8 
+use a uniform just like in model view projection matrix
+
+...
+
+in "drawTexture_fs4x.glsl"
+
+>33
+uniform sampler2D uTex_dm;
+//this is one of two choices
+
+NOTE: the word "texture" is a FUNCTION
+
+at the end of main() in this file do 
+//DEBUGGING:
+//rtFragColor = vTexcoord;
+
+
+
+
+
+
+
+
+
